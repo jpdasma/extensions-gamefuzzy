@@ -612,7 +612,7 @@ const paperback_extensions_common_1 = require("paperback-extensions-common");
 const Parser_1 = require("./Parser");
 const MANGAPILL_DOMAIN = 'https://www.mangapill.com';
 exports.MangaPillInfo = {
-    version: '2.1.0',
+    version: '2.1.1',
     name: 'MangaPill',
     description: 'Extension that pulls manga from mangapill.com. It has a lot of officially translated manga but can sometimes miss manga notifications',
     author: 'GameFuzzy',
@@ -823,15 +823,15 @@ const paperback_extensions_common_1 = require("paperback-extensions-common");
 const entities = require('entities');
 class Parser {
     parseMangaDetails($, mangaId) {
-        var _a, _b, _c;
-        const titles = [this.decodeHTMLEntity($('.font-bold.text-lg').text().trim())];
+        var _a, _b, _c, _d;
+        const titles = [this.decodeHTMLEntity((_a = $('.lazy').attr('alt')) !== null && _a !== void 0 ? _a : '')];
         const image = $('.lazy').attr('data-src');
         const summary = $('.text-sm.text--secondary').text().trim();
         let status = paperback_extensions_common_1.MangaStatus.ONGOING, released, rating = 0;
         let tagArrayGenres = [];
         let tagArrayFormat = [];
         for (const obj of $('a[href*=genre]').toArray()) {
-            const id = (_a = $(obj).attr('href')) === null || _a === void 0 ? void 0 : _a.replace('/search?genre=', '').trim();
+            const id = (_b = $(obj).attr('href')) === null || _b === void 0 ? void 0 : _b.replace('/search?genre=', '').trim();
             const label = $(obj).text().trim();
             if (typeof id === 'undefined' || typeof label === 'undefined')
                 continue;
@@ -866,13 +866,13 @@ class Parser {
                 }
                 case 2: {
                     // Date of release
-                    released = (_b = descObj.text().trim()) !== null && _b !== void 0 ? _b : undefined;
+                    released = (_c = descObj.text().trim()) !== null && _c !== void 0 ? _c : undefined;
                     i++;
                     continue;
                 }
                 case 3: {
                     // Rating
-                    rating = (_c = Number(descObj.text().trim().replace(' / 10', ''))) !== null && _c !== void 0 ? _c : undefined;
+                    rating = (_d = Number(descObj.text().trim().replace(' / 10', ''))) !== null && _d !== void 0 ? _d : undefined;
                     i++;
                     continue;
                 }
@@ -999,11 +999,10 @@ class Parser {
     parseFeaturedSection($) {
         var _a, _b;
         const mangaTiles = [];
-        for (const obj of $('div[class=relative]:not([id="search-popup"])').toArray()) {
-            const href = ((_a = $('a', $(obj)).attr('href')) !== null && _a !== void 0 ? _a : '');
-            const id = href.split('-')[0].split('/').pop() + '/' + ((_b = href.split('/').pop()) === null || _b === void 0 ? void 0 : _b.split('-chapter')[0].trim());
-            const titleText = this.decodeHTMLEntity($('.text-white:last-child', $(obj)).text());
-            const image = $('img', $('div', $(obj))).attr('data-src');
+        for (const obj of $('div.my-6 .featured-grid .rounded').toArray()) {
+            const id = (_a = $('a:nth-child(2)', obj).attr('href')) === null || _a === void 0 ? void 0 : _a.replace('/manga/', '');
+            const titleText = this.decodeHTMLEntity($('a:nth-child(2)', obj).text().trim());
+            const image = (_b = $('a img', obj).attr('data-src')) !== null && _b !== void 0 ? _b : '';
             const collectedIds = [];
             if (typeof id === 'undefined' || typeof image === 'undefined')
                 continue;
@@ -1022,10 +1021,10 @@ class Parser {
         var _a;
         const mangaTiles = [];
         const collectedIds = [];
-        for (const obj of $('.flex.bg-card.p-2.rounded').toArray()) {
-            const id = (_a = $('a.inilne.block', obj).attr('href')) === null || _a === void 0 ? void 0 : _a.replace('/manga/', '');
-            const titleText = this.decodeHTMLEntity($('a.inilne.block', obj).text().trim());
-            const image = $('img', $('a', $(obj))).attr('data-src');
+        for (const obj of $('div.grid div:not([class])').toArray()) {
+            const id = (_a = $('a.text-secondary', obj).attr('href')) === null || _a === void 0 ? void 0 : _a.replace('/manga/', '');
+            const titleText = this.decodeHTMLEntity($('a.text-secondary', obj).text().trim());
+            const image = $('a figure img', obj).attr('data-src');
             if (typeof id === 'undefined' || typeof image === 'undefined')
                 continue;
             if (!collectedIds.includes(id)) {
