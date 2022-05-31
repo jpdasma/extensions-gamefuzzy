@@ -27038,7 +27038,7 @@ const paperback_extensions_common_1 = require("paperback-extensions-common");
 const Parser_1 = require("./Parser");
 const BATOTO_DOMAIN = 'https://bato.to';
 exports.BatoToInfo = {
-    version: '2.0.2',
+    version: '2.0.3',
     name: 'Bato.To',
     description: 'Extension that pulls western comics from bato.to',
     author: 'GameFuzzy & NmN',
@@ -27440,7 +27440,7 @@ class Parser {
         return chapters;
     }
     parseChapterDetails($) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d;
         const pages = [];
         // Get all of the pages
         const scripts = $('script').toArray();
@@ -27448,38 +27448,22 @@ class Parser {
             const script = (_a = scriptObj.children[0]) === null || _a === void 0 ? void 0 : _a.data;
             if (typeof script === 'undefined')
                 continue;
-            if (script.includes('var images =')) {
-                const imgJson = JSON.parse((_b = script.split('var images = ', 2)[1].split(';', 2)[0]) !== null && _b !== void 0 ? _b : '');
-                const imgNames = imgJson.names();
-                if (imgNames != null) {
-                    for (let i = 0; i < imgNames.length(); i++) {
-                        const imgKey = imgNames.getString(i);
-                        const imgUrl = imgJson.getString(imgKey);
-                        pages.push(imgUrl);
-                    }
-                }
-            }
-            else if (script.includes('const server =')) {
-                const encryptedServer = ((_c = script.split('const server = ', 2)[1].split(';', 2)[0]) !== null && _c !== void 0 ? _c : '').replace(/"/g, '');
-                const batoJS = eval((_d = script.split('const batojs = ', 2)[1].split(';', 2)[0]) !== null && _d !== void 0 ? _d : '').toString();
-                const decryptScript = CryptoJS.AES.decrypt(encryptedServer, batoJS).toString(CryptoJS.enc.Utf8);
-                const server = decryptScript.toString().replace(/"/g, '');
-                const imgArray = JSON.parse((_e = script.split('const images = ', 2)[1].split(';', 2)[0]) !== null && _e !== void 0 ? _e : '');
+            if (script.includes('const batoWord =')) {
+                /*
+                  https://xfs-003.batcg.com/comic/7002/d32/60fb603d33142e3200f1223d/8351241_720_380_88450.jpeg?acc=Bg31t3HEbG1iSOK0lW_9XQ&exp=1654079974
+                  imgArr[n] = https://xfs-003.batcg.com/comic/7002/d32/60fb603d33142e3200f1223d/8351241_720_380_88450.jpeg
+                  tknArr[n] = acc=Bg31t3HEbG1iSOK0lW_9XQ&exp=1654079974
+                */
+                const batoJS = eval((_b = script.split('const batoPass = ', 2)[1].split(';', 2)[0]) !== null && _b !== void 0 ? _b : '').toString();
+                const imgArray = JSON.parse((_c = script.split('const imgHttpLis = ', 2)[1].split(';', 2)[0]) !== null && _c !== void 0 ? _c : '');
+                const encryptedToken = ((_d = script.split('const batoWord = ', 2)[1].split(';', 2)[0]) !== null && _d !== void 0 ? _d : '').replace(/"/g, '');
+                const decryptScript = CryptoJS.AES.decrypt(encryptedToken, batoJS).toString(CryptoJS.enc.Utf8);
+                const tknArray = decryptScript.toString().replace(/"/g, '').replace(/[[\]']+/g, '', '').split(',');
                 if (imgArray != null) {
-                    if (script.includes('bato.to/images')) {
-                        for (let i = 0; i < imgArray.length; i++) {
-                            const imgUrl = imgArray[i];
-                            pages.push(`${imgUrl}`);
-                        }
-                    }
-                    else {
-                        for (let i = 0; i < imgArray.length; i++) {
-                            const imgUrl = imgArray[i];
-                            if (server.startsWith('http'))
-                                pages.push(`${server}${imgUrl}`);
-                            else
-                                pages.push(`https:${server}${imgUrl}`);
-                        }
+                    for (let i = 0; i < imgArray.length; i++) {
+                        if (i >= tknArray.length)
+                            break;
+                        pages.push(`${imgArray[i]}?${tknArray[i]}`);
                     }
                 }
             }
